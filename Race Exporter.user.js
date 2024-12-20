@@ -13,7 +13,7 @@
 (function() {
     'use strict';
 
-    // Wait for the user to trigger the export (e.g., a button click)
+    // Button to trigger
     const exportButton = document.createElement('button');
     exportButton.textContent = 'Export Racing Log';
     exportButton.style.position = 'fixed';
@@ -28,10 +28,9 @@
     document.body.appendChild(exportButton);
 
     exportButton.addEventListener('click', function() {
-        let apiKey = localStorage.getItem('tornApiKey'); // Get API key from localStorage
-        let userName = localStorage.getItem('tornUserName'); // Get username from localStorage
+        let apiKey = localStorage.getItem('tornApiKey'); 
+        let userName = localStorage.getItem('tornUserName'); 
 
-        // If API key and username are not stored, prompt the user
         if (!apiKey || !userName) {
             apiKey = prompt('Enter your Torn API key:');
             userName = prompt('Enter your username:');
@@ -78,7 +77,7 @@
                         // format into CSV
                         const csvData = formatCSV(racingLogs);
 
-                        // Send the CSV data to Google Apps Script for upload to Google Drive
+                        // Send the CSV data to Google
                         sendDataToGoogleAppsScript(csvData, userName);
                     } else {
                         alert('No racing logs found!');
@@ -93,7 +92,6 @@
         });
     }
 
-    // Format the racing logs into CSV format
     function formatCSV(racingLogs) {
         let csvData = 'log,title,timestamp,category,data.car,data.track,data.time,params.italic,params.color\n';
 
@@ -104,7 +102,7 @@
         return csvData;
     }
 
-    // Send the CSV data to Google Apps Script for uploading to Google Drive
+    // Send the CSV data to Google
     function sendDataToGoogleAppsScript(csvData, userName) {
         GM_xmlhttpRequest({
             method: 'POST',
