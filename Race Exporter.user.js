@@ -2,9 +2,9 @@
 // @name         Race Exporter
 // @namespace    https://github.com/MK07/Torn-Race-Record-Exporter
 // @version      1.0
-// @description  Description of what the script does
+// @description  Exports Racing CSVs to the Drive folder
 // @author       MK07
-// @match        *://*/*  
+// @match        https://www.torn.com/loader.php?sid=racing
 // @grant        none
 // @updateURL    https://raw.githubusercontent.com/MK07/Torn-Race-Record-Exporter/main/Race%20Exporter.user.js
 // @downloadURL  https://raw.githubusercontent.com/MK07/Torn-Race-Record-Exporter/main/Race%20Exporter.user.js
