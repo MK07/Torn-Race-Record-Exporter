@@ -1,13 +1,13 @@
 // ==UserScript==
-// @name         Torn Racing Lap Record exporter
-// @namespace    http://tampermonkey.net/
-// @version      0.1
-// @description  Export racing logs from Torn to CSV and send it to Google Drive
-// @author       You
-// @match        https://www.torn.com/loader.php?sid=racing
-// @grant        GM_xmlhttpRequest
-// @connect      api.torn.com
-// @connect      script.google.com
+// @name         Race Exporter
+// @namespace    https://github.com/MK07/Torn-Race-Record-Exporter
+// @version      1.0
+// @description  Description of what the script does
+// @author       MK07
+// @match        *://*/*  
+// @grant        none
+// @updateURL    https://raw.githubusercontent.com/MK07/Torn-Race-Record-Exporter/main/Race%20Exporter.user.js
+// @downloadURL  https://raw.githubusercontent.com/MK07/Torn-Race-Record-Exporter/main/Race%20Exporter.user.js
 // ==/UserScript==
 
 (function() {
