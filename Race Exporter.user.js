@@ -32,7 +32,7 @@
         let userName = localStorage.getItem('tornUserName'); 
 
         if (!apiKey || !userName) {
-            apiKey = prompt('Enter your Torn API key:');
+            apiKey = prompt('Enter your Full Access API key:');
             userName = prompt('Enter your username:');
 
             if (apiKey && userName) {
