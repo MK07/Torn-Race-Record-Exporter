@@ -15,7 +15,7 @@
 
     // Wait for the user to trigger the export (e.g., a button click)
     const exportButton = document.createElement('button');
-    exportButton.textContent = 'Export Racing Log to CSV';
+    exportButton.textContent = 'Export Racing Log';
     exportButton.style.position = 'fixed';
     exportButton.style.top = '20px';
     exportButton.style.right = '20px';
