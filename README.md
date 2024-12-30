@@ -2,6 +2,8 @@
 
 A tool to export racing personal best for each track to a google drive folder, which will be processed into a google sheet for users to view.
 
+Install Violent Monkey First: [Link](https://violentmonkey.github.io/get-it/)
+
 Install Userscript: [RAW](https://raw.githubusercontent.com/MK07/Torn-Race-Record-Exporter/main/Race%20Exporter.user.js)
 
 After installing, go to torn racing page, then click Export Button Top right, it will prompt you for Your Username and API key (You need a full access key(this might change soon, because staff might make a new selection for this).
