@@ -5,15 +5,15 @@
 // @description  Exports Racing CSVs to the Drive folder
 // @author       MK07
 // @match        https://www.torn.com/loader.php?sid=racing
-// @grant        none
+// @grant        GM_xmlhttpRequest
 // @updateURL    https://raw.githubusercontent.com/MK07/Torn-Race-Record-Exporter/main/Race%20Exporter.user.js
 // @downloadURL  https://raw.githubusercontent.com/MK07/Torn-Race-Record-Exporter/main/Race%20Exporter.user.js
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
-    // Button to trigger
+    // Add a button to the page to trigger the export
     const exportButton = document.createElement('button');
     exportButton.textContent = 'Export Racing Log';
     exportButton.style.position = 'fixed';
@@ -27,9 +27,9 @@
     exportButton.style.borderRadius = '5px';
     document.body.appendChild(exportButton);
 
-    exportButton.addEventListener('click', function() {
-        let apiKey = localStorage.getItem('tornApiKey'); 
-        let userName = localStorage.getItem('tornUserName'); 
+    exportButton.addEventListener('click', function () {
+        let apiKey = localStorage.getItem('tornApiKey');
+        let userName = localStorage.getItem('tornUserName');
 
         if (!apiKey || !userName) {
             apiKey = prompt('Enter your Full Access API key:');
@@ -49,60 +49,85 @@
         fetchRacingLogs(apiKey, userName);
     });
 
-    // Fetch racing logs from Torn API
+    // Fetch racing logs from Torn API with pagination
     function fetchRacingLogs(apiKey, userName) {
-        GM_xmlhttpRequest({
-            method: 'GET',
-            url: `https://api.torn.com/user/?selections=log&log=8733&key=${apiKey}`,
-            onload: function(response) {
-                if (response.status === 200) {
-                    const data = JSON.parse(response.responseText);
-                    const logs = data.log;
+        const baseUrl = `https://api.torn.com/user/?selections=log&log=8733&key=${apiKey}`;
+        let timeTo = null;
+        let racingLogs = [];
 
-                    if (logs) {
-                        let racingLogs = [];
+        const fetchLogs = () => {
+            const url = timeTo ? `${baseUrl}&to=${timeTo - 1}` : baseUrl;
+            GM_xmlhttpRequest({
+                method: 'GET',
+                url: url,
+                onload: function (response) {
+                    try {
+                        if (response.status === 200) {
+                            const data = JSON.parse(response.responseText);
+                            if (data.error) {
+                                alert(`Error from Torn API: ${data.error.error}`);
+                                return;
+                            }
+                            const logs = data.log || {};
+                            const logEntries = Object.values(logs);
 
-                        for (const logId in logs) {
-                            const log = logs[logId];
-                            racingLogs.push({
-                                log: log.log,
-                                title: log.title,
-                                timestamp: log.timestamp,
-                                category: log.category,
-                                data: log.data,
-                                params: log.params
-                            });
+                            if (logEntries.length === 0) {
+                                const csvData = formatCSV(racingLogs);
+                                sendDataToGoogleAppsScript(csvData, userName);
+                                return;
+                            }
+
+                            racingLogs = racingLogs.concat(
+                                logEntries.map(log => ({
+                                    log: log.log || '',
+                                    title: log.title || '',
+                                    timestamp: log.timestamp || '',
+                                    category: log.category || '',
+                                    car: log.data?.car || '',
+                                    track: log.data?.track || '',
+                                    time: log.data?.time || '',
+                                    italic: log.params?.italic || '',
+                                    color: log.params?.color || ''
+                                }))
+                            );
+
+                            timeTo = Math.min(...logEntries.map(log => log.timestamp));
+                            fetchLogs();
+                        } else {
+                            alert(`Failed to fetch logs. HTTP Status: ${response.status}`);
                         }
-
-                        // format into CSV
-                        const csvData = formatCSV(racingLogs);
-
-                        // Send the CSV data to Google
-                        sendDataToGoogleAppsScript(csvData, userName);
-                    } else {
-                        alert('No racing logs found!');
+                    } catch (error) {
+                        alert(`Error processing response: ${error.message}`);
                     }
-                } else {
-                    alert('Failed to fetch racing logs from Torn API');
+                },
+                onerror: function (error) {
+                    console.error('Fetch error:', error);
+                    alert('Error fetching racing logs.');
                 }
-            },
-            onerror: function(error) {
-                alert('Error fetching racing logs: ' + error);
-            }
-        });
+            });
+        };
+
+        fetchLogs();
     }
 
+    // Utility function to escape CSV values
+    function escapeCsv(value) {
+        // Convert value to a string if it's not null/undefined; otherwise, return an empty string
+        return `"${String(value || '').replace(/"/g, '""')}"`;
+    }
+
+    // Format racing logs into CSV
     function formatCSV(racingLogs) {
-        let csvData = 'log,title,timestamp,category,data.car,data.track,data.time,params.italic,params.color\n';
-
-        racingLogs.forEach(log => {
-            csvData += `${log.log},${log.title},${log.timestamp},${log.category},${log.data.car},${log.data.track},${log.data.time},${log.params.italic},${log.params.color}\n`;
-        });
-
+        const headers = ['log', 'title', 'timestamp', 'category', 'car', 'track', 'time', 'italic', 'color'];
+        const csvData = [headers.join(',')].concat(
+            racingLogs.map(log =>
+                headers.map(field => escapeCsv(log[field])).join(',')
+            )
+        ).join('\n');
         return csvData;
     }
 
-    // Send the CSV data to Google
+    // Send the CSV data to Google Apps Script
     function sendDataToGoogleAppsScript(csvData, userName) {
         GM_xmlhttpRequest({
             method: 'POST',
@@ -114,14 +139,14 @@
             headers: {
                 'Content-Type': 'application/json'
             },
-            onload: function(response) {
+            onload: function (response) {
                 if (response.status === 200) {
                     alert('CSV file uploaded successfully to Google Drive!');
                 } else {
                     alert('Error uploading file: ' + response.statusText);
                 }
             },
-            onerror: function(error) {
+            onerror: function (error) {
                 alert('Request failed: ' + error);
             }
         });
