@@ -13,7 +13,7 @@
 (function () {
     'use strict';
 
-    // Add a button to the page to trigger the export
+    // Button, white text, green background, ugly colour???
     const exportButton = document.createElement('button');
     exportButton.textContent = 'Export Racing Log';
     exportButton.style.position = 'fixed';
@@ -36,7 +36,7 @@
             userName = prompt('Enter your username:');
 
             if (apiKey && userName) {
-                // Store the API key and username for future use
+                // Store locally, might need changes when user selection gets added
                 localStorage.setItem('tornApiKey', apiKey);
                 localStorage.setItem('tornUserName', userName);
             } else {
@@ -45,11 +45,10 @@
             }
         }
 
-        // Fetch the racing logs from Torn API
+        // Fetch from API
         fetchRacingLogs(apiKey, userName);
     });
 
-    // Fetch racing logs from Torn API with pagination
     function fetchRacingLogs(apiKey, userName) {
         const baseUrl = `https://api.torn.com/user/?selections=log&log=8733&key=${apiKey}`;
         let timeTo = null;
@@ -110,13 +109,12 @@
         fetchLogs();
     }
 
-    // Utility function to escape CSV values
+    // extra format for the csv, cause there is going to be the broken strings
     function escapeCsv(value) {
-        // Convert value to a string if it's not null/undefined; otherwise, return an empty string
         return `"${String(value || '').replace(/"/g, '""')}"`;
     }
 
-    // Format racing logs into CSV
+    // Convert into csv
     function formatCSV(racingLogs) {
         const headers = ['log', 'title', 'timestamp', 'category', 'car', 'track', 'time', 'italic', 'color'];
         const csvData = [headers.join(',')].concat(
@@ -127,7 +125,7 @@
         return csvData;
     }
 
-    // Send the CSV data to Google Apps Script
+    // Send data to drive
     function sendDataToGoogleAppsScript(csvData, userName) {
         GM_xmlhttpRequest({
             method: 'POST',
