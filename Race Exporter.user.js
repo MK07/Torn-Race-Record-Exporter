@@ -129,7 +129,7 @@
     function sendDataToGoogleAppsScript(csvData, userName) {
         GM_xmlhttpRequest({
             method: 'POST',
-            url: 'https://script.google.com/macros/s/AKfycbxH3m0CFCSJ0HK7BfZtIf3rHkWeAG5dcJ-bw9hzshWB65wxZZNXmrVZzJo9VKLMCQ8T/exec',
+            url: 'https://script.google.com/macros/s/AKfycbzA-aXSEM56APtgBTG4QLV1d3bmYjmvCk9MBKiDtjSbFeeOsr5hhv1sIewQ_UqV2RpM/exec',
             data: JSON.stringify({
                 csvData: csvData,
                 userName: userName
