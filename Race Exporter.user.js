@@ -1,152 +1,109 @@
 // ==UserScript==
-// @name         Race Exporter
-// @namespace    https://github.com/MK07/Torn-Race-Record-Exporter
-// @version      1.0
-// @description  Exports Racing CSVs to the Drive folder
+// @name         Torn Racing Records Uploader
+// @namespace    https://github.com/yourname/torn-uploader
+// @version      2.0
+// @description  Exports Racing Records to the Drive folder
 // @author       MK07
 // @match        https://www.torn.com/loader.php?sid=racing
 // @grant        GM_xmlhttpRequest
-// @updateURL    https://raw.githubusercontent.com/MK07/Torn-Race-Record-Exporter/main/Race%20Exporter.user.js
-// @downloadURL  https://raw.githubusercontent.com/MK07/Torn-Race-Record-Exporter/main/Race%20Exporter.user.js
 // ==/UserScript==
 
-(function () {
-    'use strict';
+(function() {
+  'use strict';
 
-    // Button, white text, green background, ugly colour???
-    const exportButton = document.createElement('button');
-    exportButton.textContent = 'Export Racing Log';
-    exportButton.style.position = 'fixed';
-    exportButton.style.top = '20px';
-    exportButton.style.right = '20px';
-    exportButton.style.padding = '10px';
-    exportButton.style.backgroundColor = '#28a745';
-    exportButton.style.color = 'white';
-    exportButton.style.fontSize = '16px';
-    exportButton.style.border = 'none';
-    exportButton.style.borderRadius = '5px';
-    document.body.appendChild(exportButton);
+  const webAppUrl = "https://script.google.com/macros/s/AKfycbzKWY-yLCzrlyAZTwDW3SOjiRQMqQtqAnNFouswZs1RB-kc76uDmFZZT7BkpXX0O7Cl/exec"; 
 
-    exportButton.addEventListener('click', function () {
-        let apiKey = localStorage.getItem('tornApiKey');
-        let userName = localStorage.getItem('tornUserName');
+  function getOrPromptSetting(key, promptMsg) {
+    let value = localStorage.getItem(key);
+    if (!value) {
+      value = prompt(promptMsg);
+      if (value) localStorage.setItem(key, value);
+    }
+    return value;
+  }
 
-        if (!apiKey || !userName) {
-            apiKey = prompt('Enter your Full Access API key:');
-            userName = prompt('Enter your username:');
+  let username = getOrPromptSetting("tornUploaderUsername", "Enter your Torn username:");
+  let apiKey = getOrPromptSetting("tornUploaderApiKey", "Enter your Torn API Key (with 'racing' permission):");
 
-            if (apiKey && userName) {
-                // Store locally, might need changes when user selection gets added
-                localStorage.setItem('tornApiKey', apiKey);
-                localStorage.setItem('tornUserName', userName);
-            } else {
-                alert('API key and username are required!');
-                return;
-            }
+  const uploadBtn = document.createElement("button");
+  uploadBtn.textContent = "Upload Racing Records";
+  Object.assign(uploadBtn.style, {
+    position: "fixed",
+    top: "20px",
+    right: "60px",
+    zIndex: 9999,
+    padding: "10px 16px",
+    backgroundColor: "#008cba",
+    color: "#fff",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "14px",
+    boxShadow: "0 2px 6px rgba(0,0,0,0.2)"
+  });
+  document.body.appendChild(uploadBtn);
+
+  const gearBtn = document.createElement("div");
+  gearBtn.textContent = "⚙️";
+  Object.assign(gearBtn.style, {
+    position: "fixed",
+    top: "24px",
+    right: "20px",
+    fontSize: "18px",
+    cursor: "pointer",
+    zIndex: 9999
+  });
+  document.body.appendChild(gearBtn);
+
+  gearBtn.onclick = () => {
+    const newUsername = prompt("Update your Torn username:", localStorage.getItem("tornUploaderUsername") || "");
+    const newApiKey = prompt("Update your Torn API Key:", localStorage.getItem("tornUploaderApiKey") || "");
+    if (newUsername) localStorage.setItem("tornUploaderUsername", newUsername);
+    if (newApiKey) localStorage.setItem("tornUploaderApiKey", newApiKey);
+    alert("Settings updated.");
+    location.reload();
+  };
+
+  uploadBtn.onclick = async function() {
+    uploadBtn.disabled = true;
+    uploadBtn.textContent = "Uploading...";
+
+    try {
+      const apiUrl = `https://api.torn.com/v2/user/racingrecords?key=${apiKey}`;
+      const res = await fetch(apiUrl);
+      if (!res.ok) throw new Error("Torn API request failed");
+
+      const data = await res.json();
+      if (!data.racingrecords || !Array.isArray(data.racingrecords)) {
+        throw new Error("Invalid data from Torn API");
+      }
+
+      GM_xmlhttpRequest({
+        method: "POST",
+        url: `${webAppUrl}?username=${encodeURIComponent(username)}`,
+        headers: {
+          "Content-Type": "application/json"
+        },
+        data: JSON.stringify(data),
+        onload: function(response) {
+          alert("✅ Upload successful: " + response.responseText);
+          uploadBtn.textContent = "✅ Uploaded!";
+          setTimeout(() => uploadBtn.textContent = "Upload Racing Records", 3000);
+          uploadBtn.disabled = false;
+        },
+        onerror: function(error) {
+          alert("❌ Upload failed: " + (error.error || "Network error"));
+          uploadBtn.textContent = "❌ Upload Error";
+          setTimeout(() => uploadBtn.textContent = "Upload Racing Records", 3000);
+          uploadBtn.disabled = false;
         }
+      });
 
-        // Fetch from API
-        fetchRacingLogs(apiKey, userName);
-    });
-
-    function fetchRacingLogs(apiKey, userName) {
-        const baseUrl = `https://api.torn.com/user/?selections=log&log=8733&key=${apiKey}`;
-        let timeTo = null;
-        let racingLogs = [];
-
-        const fetchLogs = () => {
-            const url = timeTo ? `${baseUrl}&to=${timeTo - 1}` : baseUrl;
-            GM_xmlhttpRequest({
-                method: 'GET',
-                url: url,
-                onload: function (response) {
-                    try {
-                        if (response.status === 200) {
-                            const data = JSON.parse(response.responseText);
-                            if (data.error) {
-                                alert(`Error from Torn API: ${data.error.error}`);
-                                return;
-                            }
-                            const logs = data.log || {};
-                            const logEntries = Object.values(logs);
-
-                            if (logEntries.length === 0) {
-                                const csvData = formatCSV(racingLogs);
-                                sendDataToGoogleAppsScript(csvData, userName);
-                                return;
-                            }
-
-                            racingLogs = racingLogs.concat(
-                                logEntries.map(log => ({
-                                    log: log.log || '',
-                                    title: log.title || '',
-                                    timestamp: log.timestamp || '',
-                                    category: log.category || '',
-                                    car: log.data?.car || '',
-                                    track: log.data?.track || '',
-                                    time: log.data?.time || '',
-                                    italic: log.params?.italic || '',
-                                    color: log.params?.color || ''
-                                }))
-                            );
-
-                            timeTo = Math.min(...logEntries.map(log => log.timestamp));
-                            fetchLogs();
-                        } else {
-                            alert(`Failed to fetch logs. HTTP Status: ${response.status}`);
-                        }
-                    } catch (error) {
-                        alert(`Error processing response: ${error.message}`);
-                    }
-                },
-                onerror: function (error) {
-                    console.error('Fetch error:', error);
-                    alert('Error fetching racing logs.');
-                }
-            });
-        };
-
-        fetchLogs();
+    } catch (err) {
+      alert("❌ Upload failed: " + err.message);
+      uploadBtn.textContent = "❌ Upload Error";
+      setTimeout(() => uploadBtn.textContent = "Upload Racing Records", 3000);
+      uploadBtn.disabled = false;
     }
-
-    // extra format for the csv, cause there is going to be the broken strings
-    function escapeCsv(value) {
-        return `"${String(value || '').replace(/"/g, '""')}"`;
-    }
-
-    // Convert into csv
-    function formatCSV(racingLogs) {
-        const headers = ['log', 'title', 'timestamp', 'category', 'car', 'track', 'time', 'italic', 'color'];
-        const csvData = [headers.join(',')].concat(
-            racingLogs.map(log =>
-                headers.map(field => escapeCsv(log[field])).join(',')
-            )
-        ).join('\n');
-        return csvData;
-    }
-
-    // Send data to drive
-    function sendDataToGoogleAppsScript(csvData, userName) {
-        GM_xmlhttpRequest({
-            method: 'POST',
-            url: 'https://script.google.com/macros/s/AKfycbzA-aXSEM56APtgBTG4QLV1d3bmYjmvCk9MBKiDtjSbFeeOsr5hhv1sIewQ_UqV2RpM/exec',
-            data: JSON.stringify({
-                csvData: csvData,
-                userName: userName
-            }),
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            onload: function (response) {
-                if (response.status === 200) {
-                    alert('CSV file uploaded successfully to Google Drive!');
-                } else {
-                    alert('Error uploading file: ' + response.statusText);
-                }
-            },
-            onerror: function (error) {
-                alert('Request failed: ' + error);
-            }
-        });
-    }
+  };
 })();
