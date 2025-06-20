@@ -11,7 +11,7 @@
 (function() {
   'use strict';
 
-  const webAppUrl = "https://script.google.com/macros/s/AKfycbzKWY-yLCzrlyAZTwDW3SOjiRQMqQtqAnNFouswZs1RB-kc76uDmFZZT7BkpXX0O7Cl/exec"; 
+  const webAppUrl = "https://script.google.com/macros/s/AKfycbzA-aXSEM56APtgBTG4QLV1d3bmYjmvCk9MBKiDtjSbFeeOsr5hhv1sIewQ_UqV2RpM/exec"; 
 
   function getOrPromptSetting(key, promptMsg) {
     let value = localStorage.getItem(key);
