@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name         Torn Racing Records Uploader
-// @namespace    https://github.com/yourname/torn-uploader
+// @name         Torn Race Records Exporter
+// @namespace    https://github.com/MK07/Torn-Race-Record-Exporter
 // @version      2.0
 // @description  Exports Racing Records to the Drive folder
 // @author       MK07
