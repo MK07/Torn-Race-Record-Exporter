@@ -2,8 +2,8 @@
 // @name         Torn Racing Record Exporter
 // @namespace    https://github.com/MK07/Torn-Race-Record-Exporter
 // @version      2.1
-// @description  Uploads racing records to a Google Apps Script Web App for leaderboard tracking.
-// @author       YourName
+// @description  Uploads racing records to google sheets for ranking.
+// @author       MK07
 // @match        https://www.torn.com/loader.php?sid=racing
 // @grant        GM_xmlhttpRequest
 // ==/UserScript==
