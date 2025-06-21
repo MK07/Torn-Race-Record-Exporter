@@ -1,109 +1,107 @@
 // ==UserScript==
-// @name         Torn Race Records Exporter
+// @name         Torn Racing Record Exporter
 // @namespace    https://github.com/MK07/Torn-Race-Record-Exporter
-// @version      2.0
-// @description  Exports Racing Records to the Drive folder
-// @author       MK07
+// @version      2.1
+// @description  Uploads racing records to a Google Apps Script Web App for leaderboard tracking.
+// @author       YourName
 // @match        https://www.torn.com/loader.php?sid=racing
 // @grant        GM_xmlhttpRequest
 // ==/UserScript==
 
-(function() {
+(function () {
   'use strict';
 
-  const webAppUrl = "https://script.google.com/macros/s/AKfycbzA-aXSEM56APtgBTG4QLV1d3bmYjmvCk9MBKiDtjSbFeeOsr5hhv1sIewQ_UqV2RpM/exec"; 
+  const webAppUrl = 'https://script.google.com/macros/s/AKfycbzA-aXSEM56APtgBTG4QLV1d3bmYjmvCk9MBKiDtjSbFeeOsr5hhv1sIewQ_UqV2RpM/exec';
 
-  function getOrPromptSetting(key, promptMsg) {
-    let value = localStorage.getItem(key);
-    if (!value) {
-      value = prompt(promptMsg);
-      if (value) localStorage.setItem(key, value);
+  //Store Keys
+  function getOrPrompt(key, message) {
+    let val = localStorage.getItem(key);
+    if (!val) {
+      val = prompt(message);
+      if (val) localStorage.setItem(key, val);
     }
-    return value;
+    return val;
   }
 
-  let username = getOrPromptSetting("tornUploaderUsername", "Enter your Torn username:");
-  let apiKey = getOrPromptSetting("tornUploaderApiKey", "Enter your Torn API Key (with 'racing' permission):");
+  let username = getOrPrompt('tornUsername', 'Enter your Torn username:');
+  let apiKey = getOrPrompt('tornApiKey', 'Enter your Minimal Access key:');
 
-  const uploadBtn = document.createElement("button");
-  uploadBtn.textContent = "Upload Racing Records";
+  // Upload button
+  const uploadBtn = document.createElement('button');
+  uploadBtn.textContent = 'Upload Racing Records';
   Object.assign(uploadBtn.style, {
-    position: "fixed",
-    top: "20px",
-    right: "60px",
+    position: 'fixed',
+    top: '20px',
+    right: '60px',
     zIndex: 9999,
-    padding: "10px 16px",
-    backgroundColor: "#008cba",
-    color: "#fff",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontSize: "14px",
-    boxShadow: "0 2px 6px rgba(0,0,0,0.2)"
+    padding: '10px 16px',
+    backgroundColor: '#008cba',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
   });
   document.body.appendChild(uploadBtn);
 
-  const gearBtn = document.createElement("div");
-  gearBtn.textContent = "⚙️";
+  // Change api and username
+  const gearBtn = document.createElement('div');
+  gearBtn.textContent = '⚙️';
   Object.assign(gearBtn.style, {
-    position: "fixed",
-    top: "24px",
-    right: "20px",
-    fontSize: "18px",
-    cursor: "pointer",
+    position: 'fixed',
+    top: '24px',
+    right: '20px',
+    fontSize: '18px',
+    cursor: 'pointer',
     zIndex: 9999
   });
   document.body.appendChild(gearBtn);
 
   gearBtn.onclick = () => {
-    const newUsername = prompt("Update your Torn username:", localStorage.getItem("tornUploaderUsername") || "");
-    const newApiKey = prompt("Update your Torn API Key:", localStorage.getItem("tornUploaderApiKey") || "");
-    if (newUsername) localStorage.setItem("tornUploaderUsername", newUsername);
-    if (newApiKey) localStorage.setItem("tornUploaderApiKey", newApiKey);
-    alert("Settings updated.");
+    const newUsername = prompt('Update username:', localStorage.getItem('tornUsername') || '');
+    const newKey = prompt('Update API key:', localStorage.getItem('tornApiKey') || '');
+    if (newUsername) localStorage.setItem('tornUsername', newUsername);
+    if (newKey) localStorage.setItem('tornApiKey', newKey);
+    alert('Settings updated.');
     location.reload();
   };
 
-  uploadBtn.onclick = async function() {
+  // Main Script
+  uploadBtn.onclick = async () => {
     uploadBtn.disabled = true;
-    uploadBtn.textContent = "Uploading...";
+    uploadBtn.textContent = 'Uploading...';
 
     try {
-      const apiUrl = `https://api.torn.com/v2/user/racingrecords?key=${apiKey}`;
-      const res = await fetch(apiUrl);
-      if (!res.ok) throw new Error("Torn API request failed");
-
+      const res = await fetch(`https://api.torn.com/v2/user/racingrecords?key=${apiKey}`);
+      if (!res.ok) throw new Error('API request failed');
       const data = await res.json();
-      if (!data.racingrecords || !Array.isArray(data.racingrecords)) {
-        throw new Error("Invalid data from Torn API");
-      }
+
+      if (!data.racingrecords) throw new Error('Invalid racing data');
 
       GM_xmlhttpRequest({
-        method: "POST",
+        method: 'POST',
         url: `${webAppUrl}?username=${encodeURIComponent(username)}`,
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { 'Content-Type': 'application/json' },
         data: JSON.stringify(data),
-        onload: function(response) {
-          alert("✅ Upload successful: " + response.responseText);
-          uploadBtn.textContent = "✅ Uploaded!";
-          setTimeout(() => uploadBtn.textContent = "Upload Racing Records", 3000);
-          uploadBtn.disabled = false;
+        onload: (response) => {
+          alert('✅ Upload successful!');
+          uploadBtn.textContent = '✅ Uploaded!';
+          setTimeout(() => {
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = 'Upload Racing Records';
+          }, 2000);
         },
-        onerror: function(error) {
-          alert("❌ Upload failed: " + (error.error || "Network error"));
-          uploadBtn.textContent = "❌ Upload Error";
-          setTimeout(() => uploadBtn.textContent = "Upload Racing Records", 3000);
+        onerror: (err) => {
+          alert('❌ Upload failed: ' + err.error);
           uploadBtn.disabled = false;
+          uploadBtn.textContent = 'Upload Racing Records';
         }
       });
-
     } catch (err) {
-      alert("❌ Upload failed: " + err.message);
-      uploadBtn.textContent = "❌ Upload Error";
-      setTimeout(() => uploadBtn.textContent = "Upload Racing Records", 3000);
+      alert('❌ Error: ' + err.message);
       uploadBtn.disabled = false;
+      uploadBtn.textContent = 'Upload Racing Records';
     }
   };
 })();
