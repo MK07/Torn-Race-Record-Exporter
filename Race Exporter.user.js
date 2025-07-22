@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Racing Record Exporter
 // @namespace    https://github.com/MK07/Torn-Race-Record-Exporter
-// @version      2.1
+// @version      2.2
 // @description  Uploads racing records to google sheets for ranking.
 // @author       MK07
 // @match        https://www.torn.com/loader.php?sid=racing
@@ -9,12 +9,10 @@
 // @connect      script.google.com
 // @connect      googleusercontent.com
 // ==/UserScript==
-
 (function () {
   'use strict';
-
-  const webAppUrl = 'https://script.google.com/macros/s/AKfycbzA-aXSEM56APtgBTG4QLV1d3bmYjmvCk9MBKiDtjSbFeeOsr5hhv1sIewQ_UqV2RpM/exec';
-
+  const encodedUrl = 'aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J6QS1hWFNFTTU2QVB0Z0JURzRRTFYxZDNibVlqbXZDazlNQktpRHRqU2JGZWVPc3I1aGh2MXNJZXdRX1VxVjJScE0vZXhlYw==';
+  const webAppUrl = atob(encodedUrl);
   //Store Keys
   function getOrPrompt(key, message) {
     let val = localStorage.getItem(key);
@@ -24,10 +22,9 @@
     }
     return val;
   }
-
   let username = getOrPrompt('tornUsername', 'Enter your Torn username:');
   let apiKey = getOrPrompt('tornApiKey', 'Enter your Minimal Access key:');
-
+  let authKey = getOrPrompt('webAppAuth', 'Enter your webapp authentication key:');
   // Upload button
   const uploadBtn = document.createElement('button');
   uploadBtn.textContent = 'Upload Racing Records';
@@ -46,7 +43,6 @@
     boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
   });
   document.body.appendChild(uploadBtn);
-
   // Change api and username
   const gearBtn = document.createElement('div');
   gearBtn.textContent = '⚙️';
@@ -59,36 +55,42 @@
     zIndex: 9999
   });
   document.body.appendChild(gearBtn);
-
   gearBtn.onclick = () => {
     const newUsername = prompt('Update username:', localStorage.getItem('tornUsername') || '');
     const newKey = prompt('Update API key:', localStorage.getItem('tornApiKey') || '');
+    const newAuth = prompt('Update auth key:', localStorage.getItem('webAppAuth') || '');
     if (newUsername) localStorage.setItem('tornUsername', newUsername);
     if (newKey) localStorage.setItem('tornApiKey', newKey);
+    if (newAuth) localStorage.setItem('webAppAuth', newAuth);
+
     alert('Settings updated.');
     location.reload();
   };
-
   // Main Script
   uploadBtn.onclick = async () => {
     uploadBtn.disabled = true;
     uploadBtn.textContent = 'Uploading...';
-
     try {
       const res = await fetch(`https://api.torn.com/v2/user/racingrecords?key=${apiKey}`);
       if (!res.ok) throw new Error('API request failed');
       const data = await res.json();
-
       if (!data.racingrecords) throw new Error('Invalid racing data');
-
       GM_xmlhttpRequest({
         method: 'POST',
         url: `${webAppUrl}?username=${encodeURIComponent(username)}`,
         headers: { 'Content-Type': 'application/json' },
-        data: JSON.stringify(data),
+        data: JSON.stringify({
+          ...data,
+          auth: authKey
+        }),
         onload: (response) => {
-          alert('✅ Upload successful!');
-          uploadBtn.textContent = '✅ Uploaded!';
+          const result = JSON.parse(response.responseText);
+          if (result.error) {
+            alert('❌ Upload failed: ' + result.error);
+          } else {
+            alert('✅ Upload successful!');
+            uploadBtn.textContent = '✅ Uploaded!';
+          }
           setTimeout(() => {
             uploadBtn.disabled = false;
             uploadBtn.textContent = 'Upload Racing Records';
