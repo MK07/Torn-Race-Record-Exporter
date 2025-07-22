@@ -7,6 +7,7 @@ Install Violent Monkey (or any userscript manager) first: [Link](https://violent
 Install Userscript: [RAW](https://raw.githubusercontent.com/MK07/Torn-Race-Record-Exporter/main/Race%20Exporter.user.js)
 
 After installing, go to torn racing page, then click "Upload Racing Records" button on the top right of torn racing page, it will prompt you for Your Username and API key. A minimal access key is required.
+In addition, it will ask for an authentication key to verify usage to trusted users, You can message me in game or on discord to get this key.
 
 Subsquently, clicking this button will upload your log to the drive, it may take a few seconds to upload it. You will see a dialogue box informing you of your success.
 
