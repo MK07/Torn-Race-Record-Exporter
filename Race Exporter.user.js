@@ -4,7 +4,7 @@
 // @version      2.3
 // @description  Uploads racing records to Google Sheets for ranking (private community use).
 // @author       MK07
-// @match        https://www.torn.com/loader.php?sid=racing
+// @match        https://www.torn.com/page.php?sid=racing
 // @grant        GM_xmlhttpRequest
 // @connect      script.google.com
 // @connect      googleusercontent.com
@@ -124,3 +124,4 @@
     }
   };
 })();
+
