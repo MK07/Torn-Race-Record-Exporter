@@ -4,7 +4,7 @@ A tool to export racing lap records for each track to a google drive folder, whi
 
 Install Violent Monkey (or any userscript manager) first: [Link](https://violentmonkey.github.io/get-it/)
 
-Install Userscript: [RAW](https://raw.githubusercontent.com/MK07/Torn-Race-Record-Exporter/main/Race%20Exporter.user.js)
+Install Userscript: [RAW](https://raw.githubusercontent.com/MK07/Torn-Race-Record-Exporter/refs/heads/main/Race Exporter.user.js)
 
 After installing, go to torn racing page, then click "Upload Racing Records" button on the top right of torn racing page, it will prompt you for Your Username and API key. A minimal access key is required.
 In addition, it will ask for an authentication key to verify usage to trusted users, You can message me in game or on discord to get this key.
