@@ -67,7 +67,7 @@ uploadBtn.onclick = async () => {
 
     const data = await res.json();
     if (!data.racingrecords) throw new Error('Invalid racing data');
-//cross origin request
+//cross origin request to Google sheets
     GM_xmlhttpRequest({
       method: 'POST',
       url: `${webAppUrl}?username=${encodeURIComponent(username)}`,
